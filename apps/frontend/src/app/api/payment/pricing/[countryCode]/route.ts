@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { countryCode: string } },
+  { params }: { params: Promise<{ countryCode: string }> },
 ) {
+  const { countryCode } = await params;
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://backend:4000/api';
   // Respect Cloudflare country header over param
-  const country = req.headers.get('cf-ipcountry') ?? params.countryCode ?? 'FR';
+  const country = req.headers.get('cf-ipcountry') ?? countryCode ?? 'FR';
 
   try {
     const res = await fetch(`${apiUrl}/payment/pricing/${country}`);
