@@ -292,7 +292,9 @@ export class PaymentController {
                 lang: metadata.lang ?? 'en',
                 country: metadata.country ?? 'us',
               },
-            }).catch((e) => this.logger.warn(`HuntConfig provisioning skipped: ${e.message}`));
+            }).catch((e: unknown) =>
+              this.logger.warn(`HuntConfig provisioning skipped: ${e instanceof Error ? e.message : String(e)}`),
+            );
           }
         }
 
