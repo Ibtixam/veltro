@@ -88,8 +88,8 @@ export class GSCConnector {
   async saveCredential(userId: string, type: string, accessToken: string, refreshToken?: string): Promise<void> {
     await this.prisma.connectorCredential.upsert({
       where:  { userId_type: { userId, type } },
-      create: { userId, type, status: 'connected', accessToken, refreshToken },
-      update: { status: 'connected', accessToken, refreshToken, lastSyncAt: new Date() },
+      create: { userId, type, status: 'CONNECTED', accessToken, refreshToken },
+      update: { status: 'CONNECTED', accessToken, refreshToken, lastSyncAt: new Date() },
     });
   }
 

@@ -291,14 +291,18 @@ export class AutoDeployService {
 
   private async createApprovalToken(data: any): Promise<string> {
     const token = `approve_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const user = await this.prisma.user.findFirst({ where: { email: data.cfg?.notifyEmail } });
+    if (!user) throw new Error('User not found for approval token');
     await this.prisma.deployApproval.create({
-      data: { token, payload: data, expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) },
+      data: { userId: user.id, token, payload: data, expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) },
     });
     return token;
   }
 
   private async countTodayActions(email: string): Promise<number> {
+    const user = await this.prisma.user.findFirst({ where: { email } });
+    if (!user) return 0;
     const start = new Date(); start.setHours(0, 0, 0, 0);
-    return this.prisma.deployLog.count({ where: { email, createdAt: { gte: start } } });
+    return this.prisma.deployLog.count({ where: { userId: user.id, createdAt: { gte: start } } });
   }
 }

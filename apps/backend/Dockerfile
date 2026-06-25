@@ -9,7 +9,8 @@ WORKDIR /app
 FROM base AS deps
 COPY package*.json ./
 COPY src/prisma ./src/prisma/
-RUN npm ci --omit=dev && \
+RUN sed -i 's|../../../../node_modules/.prisma/client|../../node_modules/.prisma/client|g' src/prisma/schema.prisma && \
+    npm ci --omit=dev && \
     npx prisma generate --schema=src/prisma/schema.prisma
 
 # ─── BUILD ───────────────────────────────────────────────

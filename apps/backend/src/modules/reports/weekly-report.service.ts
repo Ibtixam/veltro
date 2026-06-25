@@ -113,7 +113,7 @@ export class WeeklyReportService {
         leadsDelta: metrics.leadsDelta,
         revenue: metrics.revenue,
         revenueDelta: metrics.revenueDelta,
-        avgPosition: metrics.avgPosition,
+        avgPosition: metrics.avgPosition ?? 0,
         clicks: metrics.clicks,
         impressions: metrics.impressions,
         ctr: metrics.ctr,
@@ -127,6 +127,7 @@ export class WeeklyReportService {
         weekEnd,
         domain: currentMetrics.domain,
         ...metrics,
+        avgPosition: metrics.avgPosition ?? 0,
       },
     });
 

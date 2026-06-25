@@ -79,13 +79,16 @@ export class HuntSchedulerService {
 
     const subscriptions = await this.prisma.subscription.findMany({
       where: { plan, status: 'ACTIVE' },
-      include: { user: true, huntConfig: true },
+      include: { user: true },
     });
 
     this.logger.log(`Enqueuing ${plan} hunts: ${subscriptions.length} subscriptions`);
 
     for (const sub of subscriptions) {
-      if (!sub.huntConfig) {
+      const huntConfig = await this.prisma.huntConfig.findUnique({
+        where: { subscriptionId: sub.id },
+      });
+      if (!huntConfig) {
         this.logger.warn(`Subscription ${sub.id} has no HuntConfig — skipping`);
         continue;
       }
@@ -98,11 +101,11 @@ export class HuntSchedulerService {
           userEmail: sub.user.email,
           userName: sub.user.name,
           huntConfig: {
-            domain:          sub.huntConfig.domain,
-            seedKeywords:    sub.huntConfig.seedKeywords,
-            lang:            sub.huntConfig.lang,
-            country:         sub.huntConfig.country,
-            competitors:     sub.huntConfig.competitors,
+            domain:          huntConfig.domain,
+            seedKeywords:    huntConfig.seedKeywords,
+            lang:            huntConfig.lang,
+            country:         huntConfig.country,
+            competitors:     huntConfig.competitors,
             maxClusters:     cfg.maxClusters,
             maxPagesPerCycle: cfg.maxPagesPerCycle,
             minClusterScore: cfg.minClusterScore,
@@ -124,10 +127,14 @@ export class HuntSchedulerService {
   async triggerManualHunt(subscriptionId: string): Promise<{ jobId: string }> {
     const sub = await this.prisma.subscription.findUnique({
       where: { id: subscriptionId },
-      include: { user: true, huntConfig: true },
+      include: { user: true },
     });
 
-    if (!sub || !sub.huntConfig) throw new Error('Subscription or config not found');
+    const huntConfig = sub
+      ? await this.prisma.huntConfig.findUnique({ where: { subscriptionId: sub.id } })
+      : null;
+
+    if (!sub || !huntConfig) throw new Error('Subscription or config not found');
 
     const plan = sub.plan as PlanTier;
     const cfg  = PLAN_CONFIG[plan];
@@ -138,11 +145,11 @@ export class HuntSchedulerService {
       userEmail: sub.user.email,
       userName: sub.user.name,
       huntConfig: {
-        domain:          sub.huntConfig.domain,
-        seedKeywords:    sub.huntConfig.seedKeywords,
-        lang:            sub.huntConfig.lang,
-        country:         sub.huntConfig.country,
-        competitors:     sub.huntConfig.competitors,
+        domain:          huntConfig.domain,
+        seedKeywords:    huntConfig.seedKeywords,
+        lang:            huntConfig.lang,
+        country:         huntConfig.country,
+        competitors:     huntConfig.competitors,
         maxClusters:     cfg.maxClusters,
         maxPagesPerCycle: cfg.maxPagesPerCycle,
         minClusterScore: cfg.minClusterScore,

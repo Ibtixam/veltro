@@ -42,18 +42,21 @@ export class HuntWorkerProcessor extends WorkerHost {
 
     // ── STEP 3: Save hunt record to DB ────────────────────────────────
     await job.updateProgress(70);
+    const site = await this.prisma.site.upsert({
+      where: { userId_domain: { userId, domain: huntConfig.domain } },
+      create: { userId, domain: huntConfig.domain },
+      update: {},
+    });
     const huntRecord = await this.prisma.huntCycle.create({
       data: {
-        subscriptionId,
         userId,
-        domain:             huntConfig.domain,
+        siteId:             site.id,
         plan,
         cycleDate:          new Date(cycleDate),
         totalOpportunities: huntResult.totalOpportunities,
         criticalCount:      huntResult.criticalCount,
         pagesGenerated:     pkg.summary.pagesGenerated,
         estimatedTraffic:   huntResult.estimatedMonthlyTrafficIfFixed,
-        zipSizeBytes:       pkg.zipBuffer.length,
         huntSummary:        huntResult as any,
       },
     });

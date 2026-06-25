@@ -17,8 +17,8 @@ export class BingConnector {
   async saveApiKey(userId: string, apiKey: string): Promise<void> {
     await this.prisma.connectorCredential.upsert({
       where:  { userId_type: { userId, type: 'bing' } },
-      create: { userId, type: 'bing', status: 'connected', apiKey },
-      update: { status: 'connected', apiKey, lastSyncAt: new Date() },
+      create: { userId, type: 'bing', status: 'CONNECTED', apiKey },
+      update: { status: 'CONNECTED', apiKey, lastSyncAt: new Date() },
     });
   }
 

@@ -10,14 +10,14 @@ export class AdminService {
     const [users, activeSubs, payments, sites, openApprovals] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.subscription.count({ where: { status: 'ACTIVE' } }),
-      this.prisma.payment.aggregate({ _sum: { amount: true }, where: { status: 'SUCCEEDED' } }),
+      this.prisma.payment.aggregate({ _sum: { amountCents: true }, where: { status: 'SUCCEEDED' } }),
       this.prisma.site.count(),
-      this.prisma.deployApproval.count({ where: { status: 'PENDING_APPROVAL' } }).catch(() => 0),
+      this.prisma.deployApproval.count({ where: { approved: false, expiresAt: { gt: new Date() } } }).catch(() => 0),
     ]);
     return {
       totalUsers: users,
       activeSubscriptions: activeSubs,
-      lifetimeRevenue: payments._sum.amount ?? 0,
+      lifetimeRevenue: payments._sum?.amountCents ?? 0,
       totalSites: sites,
       pendingApprovals: openApprovals,
       generatedAt: new Date().toISOString(),
@@ -49,14 +49,14 @@ export class AdminService {
   async recentPayments(take = 50) {
     return this.prisma.payment.findMany({
       take, orderBy: { createdAt: 'desc' },
-      select: { id: true, amount: true, currency: true, provider: true, status: true, createdAt: true, userId: true },
+      select: { id: true, amountCents: true, currency: true, provider: true, status: true, createdAt: true, userId: true },
     });
   }
 
   async subscriptions(take = 100) {
     return this.prisma.subscription.findMany({
       take, orderBy: { createdAt: 'desc' },
-      select: { id: true, plan: true, cycle: true, status: true, userId: true, currentPeriodEnd: true },
+      select: { id: true, plan: true, billingCycle: true, status: true, userId: true, currentPeriodEnd: true },
     });
   }
 }

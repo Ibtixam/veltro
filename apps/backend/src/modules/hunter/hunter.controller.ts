@@ -69,13 +69,14 @@ export class HunterController {
       orderBy: { cycleDate: 'desc' },
       take:    20,
       select: {
-        id: true, domain: true, plan: true, cycleDate: true,
+        id: true, plan: true, cycleDate: true,
         totalOpportunities: true, criticalCount: true,
         pagesGenerated: true, estimatedTraffic: true,
-        zipSizeBytes: true, emailSentAt: true,
+        deliveredAt: true,
+        site: { select: { domain: true } },
       },
     });
-    return { cycles };
+    return { cycles: cycles.map(c => ({ ...c, domain: c.site.domain })) };
   }
 
   // Pricing endpoint (public)

@@ -22,8 +22,8 @@ export class AhrefsConnector {
   async saveApiKey(userId: string, apiKey: string): Promise<void> {
     await this.prisma.connectorCredential.upsert({
       where:  { userId_type: { userId, type: 'ahrefs' } },
-      create: { userId, type: 'ahrefs', status: 'connected', apiKey },
-      update: { status: 'connected', apiKey, lastSyncAt: new Date() },
+      create: { userId, type: 'ahrefs', status: 'CONNECTED', apiKey },
+      update: { status: 'CONNECTED', apiKey, lastSyncAt: new Date() },
     });
   }
 

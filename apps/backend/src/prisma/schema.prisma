@@ -2,6 +2,8 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Monorepo: hoisted to repo root. Docker build rewrites this path (see Dockerfile).
+  output   = "../../../../node_modules/.prisma/client"
 }
 
 datasource db {
