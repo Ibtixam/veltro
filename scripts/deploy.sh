@@ -44,7 +44,7 @@ npm ci --workspace=apps/frontend
 
 # Generate Prisma client
 log "Generating Prisma client..."
-cd apps/backend && npx prisma generate && cd ../..
+npm run db:generate
 
 # Build
 log "Building applications..."
