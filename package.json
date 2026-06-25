@@ -10,7 +10,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "db:migrate": "npx prisma migrate deploy --schema=apps/backend/src/prisma/schema.prisma",
-    "db:generate": "npx prisma generate --schema=apps/backend/src/prisma/schema.prisma",
+    "db:generate": "npm exec -w @veltro/backend -- prisma generate --schema=src/prisma/schema.prisma",
     "db:seed": "cd apps/backend && npx ts-node src/prisma/seed.ts",
     "docker:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
     "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
