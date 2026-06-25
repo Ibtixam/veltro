@@ -1,0 +1,225 @@
+networks:
+  veltro_net:
+    driver: bridge
+  monitoring_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  loki_data:
+  prometheus_data:
+  grafana_data:
+
+services:
+
+  # ── POSTGRESQL 18 ─────────────────────────────────────────────────────
+  postgres:
+    image: postgres:18-alpine
+    container_name: veltro_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       veltro
+      POSTGRES_USER:     ${DB_USER:-veltro_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:     ["CMD-SHELL", "pg_isready -U ${DB_USER:-veltro_user} -d veltro"]
+      interval: 10s
+      timeout:  5s
+      retries:  5
+    networks: [veltro_net]
+    deploy:
+      resources:
+        limits: { memory: 2G }
+
+  # ── PGBOUNCER 1.22.1 (transaction mode, port 6432) ────────────────────
+  pgbouncer:
+    image: edoburu/pgbouncer:1.22.1
+    container_name: veltro_pgbouncer
+    restart: unless-stopped
+    environment:
+      DB_HOST:          postgres
+      DB_USER:          ${DB_USER:-veltro_user}
+      DB_PASSWORD:      ${DB_PASSWORD:?DB_PASSWORD required}
+      DB_NAME:          veltro
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN:  1000
+      DEFAULT_POOL_SIZE: 50
+      SERVER_RESET_QUERY: DISCARD ALL
+    ports:
+      - "6432:5432"
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [veltro_net]
+
+  # ── REDIS 8 ───────────────────────────────────────────────────────────
+  redis:
+    image: redis:8-alpine
+    container_name: veltro_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD required}
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test:     ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      retries:  5
+    networks: [veltro_net]
+
+  # ── NESTJS BACKEND ────────────────────────────────────────────────────
+  backend:
+    build:
+      context:    ./apps/backend
+      dockerfile: Dockerfile
+      target:     production
+    container_name: veltro_backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV:     production
+      DATABASE_URL: postgresql://${DB_USER:-veltro_user}:${DB_PASSWORD}@pgbouncer:5432/veltro?pgBouncer=true&connection_limit=1
+      DIRECT_URL:   postgresql://${DB_USER:-veltro_user}:${DB_PASSWORD}@postgres:5432/veltro
+      REDIS_URL:    redis://:${REDIS_PASSWORD}@redis:6379
+    env_file: [.env]
+    depends_on:
+      pgbouncer: { condition: service_started }
+      redis:     { condition: service_healthy }
+    healthcheck:
+      test:     ["CMD", "wget", "-qO-", "http://localhost:4000/api/health"]
+      interval: 15s
+      timeout:  5s
+      retries:  5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=4000"
+    networks: [veltro_net]
+    deploy:
+      replicas: 2
+      resources:
+        limits: { cpus: '1', memory: 1G }
+      update_config:
+        parallelism:    1
+        delay:          10s
+        failure_action: rollback
+
+  # ── NEXT.JS FRONTEND ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context:    ./apps/frontend
+      dockerfile: Dockerfile
+      target:     production
+    container_name: veltro_frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV:            production
+      NEXT_PUBLIC_API_URL: https://api.${DOMAIN:-localhost}
+    env_file: [.env]
+    depends_on:
+      backend: { condition: service_healthy }
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    networks: [veltro_net]
+    deploy:
+      resources:
+        limits: { cpus: '1', memory: 768M }
+
+  # ── TRAEFIK v3 ────────────────────────────────────────────────────────
+  traefik:
+    image: traefik:v3.0
+    container_name: veltro_traefik
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--metrics.prometheus=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infrastructure/traefik/letsencrypt:/letsencrypt
+    networks: [veltro_net, monitoring_net]
+
+  # ── KEYCLOAK 24 ───────────────────────────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: veltro_keycloak
+    restart: unless-stopped
+    command: start
+    environment:
+      KC_DB:                postgres
+      KC_DB_URL:            jdbc:postgresql://postgres:5432/veltro
+      KC_DB_USERNAME:       ${DB_USER:-veltro_user}
+      KC_DB_PASSWORD:       ${DB_PASSWORD}
+      KC_DB_SCHEMA:         keycloak
+      KEYCLOAK_ADMIN:       ${KC_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?KC_ADMIN_PASSWORD required}
+      KC_HOSTNAME:          auth.${DOMAIN:-localhost}
+      KC_PROXY:             edge
+      KC_HTTP_ENABLED:      "true"
+      KC_HEALTH_ENABLED:    "true"
+    depends_on:
+      postgres: { condition: service_healthy }
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=Host(`auth.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.keycloak.tls.certresolver=letsencrypt"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+    networks: [veltro_net]
+    deploy:
+      resources:
+        limits: { memory: 1G }
+
+  # ── PROMETHEUS ────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: veltro_prometheus
+    restart: unless-stopped
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+    networks: [monitoring_net]
+
+  # ── GRAFANA ───────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: veltro_grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER:     ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?GRAFANA_PASSWORD required}
+      GF_USERS_ALLOW_SIGN_UP:     "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks: [monitoring_net]
+
+  # ── LOKI ──────────────────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:latest
+    container_name: veltro_loki
+    restart: unless-stopped
+    volumes:
+      - loki_data:/loki
+    networks: [monitoring_net]

@@ -1,0 +1,604 @@
+// Veltro — Complete Prisma Schema · Bible V2 · PostgreSQL 18
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum PlanTier {
+  STARTER
+  PRO
+  AGENCY
+  ENTERPRISE
+  LIFETIME
+}
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+  LIFETIME
+}
+enum SubStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  PAUSED
+}
+enum PaymentProvider {
+  PAYBRIDGE_AFRICA
+  STRIPE
+  ORANGE_MONEY
+  MTN_MOMO
+  WAVE
+}
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+enum OnboardStep {
+  ACCOUNT
+  DOMAIN
+  STACK
+  CONNECT_GSC
+  CONNECT_GA4
+  PLAN
+  DONE
+}
+enum DeployStatus {
+  QUEUED
+  PENDING_APPROVAL
+  EXECUTING
+  DONE
+  FAILED
+  ROLLED_BACK
+}
+enum ConnStatus {
+  CONNECTED
+  EXPIRED
+  ERROR
+  NOT_CONNECTED
+}
+enum Lang {
+  EN
+  FR
+  AR
+  ZH
+  SW
+  PT
+  ES
+  DE
+  RU
+  JA
+  KO
+  TR
+  VI
+  NL
+  IT
+  HI
+  HA
+  YO
+  IG
+  AM
+  RW
+  MG
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  name         String?
+  passwordHash String?
+  role         String      @default("USER")
+  lang         Lang        @default(EN)
+  timezone     String      @default("UTC")
+  country      String?
+  phone        String?
+  onboardStep  OnboardStep @default(ACCOUNT)
+  onboardDone  Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  subscriptions   Subscription[]
+  payments        Payment[]
+  sites           Site[]
+  huntCycles      HuntCycle[]
+  connectors      ConnectorCredential[]
+  deployLogs      DeployLog[]
+  deployApprovals DeployApproval[]
+  @@index([email])
+  @@map("users")
+}
+
+model Site {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields:[userId], references:[id])
+  domain          String
+  detectedStack   String?
+  stackConfidence Int?
+  stackVersion    String?
+  stackExtras     Json?
+  stackDetectedAt DateTime?
+  businessType    String?
+  avgOrderValue   Float    @default(50)
+  conversionRate  Float    @default(0.02)
+  currency        String   @default("USD")
+  revenueGoal     Float    @default(10000)
+  competitors     String[] @default([])
+  lang            Lang     @default(EN)
+  seedKeywords    String[] @default([])
+  huntActive      Boolean  @default(true)
+  deliveryChannels  String[] @default(["email"])
+  whatsappNumber    String?
+  smsNumber         String?
+  autoDeployEnabled Boolean @default(false)
+  autoDeployTarget  String?
+  autoDeployMode    String  @default("review")
+  maxActionsPerDay  Int     @default(3)
+  rollbackThreshold Float   @default(0.20)
+  cmsApiUrl         String?
+  cmsApiKeyEnc      String?
+  cmsApiSecretEnc   String?
+  githubRepo        String?
+  githubBranch      String  @default("main")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  huntCycles      HuntCycle[]
+  @@unique([userId, domain])
+  @@index([userId])
+  @@map("sites")
+}
+
+model Subscription {
+  id                 String       @id @default(cuid())
+  userId             String
+  user               User         @relation(fields:[userId], references:[id])
+  plan               PlanTier
+  status             SubStatus    @default(TRIALING)
+  provider           PaymentProvider
+  providerSubId      String?      @unique
+  currency           String       @default("USD")
+  amountCents        Int
+  billingCycle       BillingCycle @default(MONTHLY)
+  trialEndsAt        DateTime?
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean      @default(false)
+  autoDeployAddon    Boolean      @default(false)
+  extraClusters      Int          @default(0)
+  // ── Free/trial cost control: hard usage counters (reset on conversion) ──
+  trialAiCalls       Int          @default(0)   // expensive AI ops used during trial
+  trialVideosMade    Int          @default(0)   // videos rendered during trial
+  trialHuntsRun      Int          @default(0)   // manual hunts triggered during trial
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  payments           Payment[]
+  @@index([userId, status])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields:[userId], references:[id])
+  subscriptionId    String?
+  subscription      Subscription? @relation(fields:[subscriptionId], references:[id])
+  provider          PaymentProvider
+  providerPaymentId String        @unique
+  status            PaymentStatus
+  currency          String
+  amountCents       Int
+  metadata          Json?
+  receiptUrl        String?
+  failureReason     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  @@index([userId])
+  @@map("payments")
+}
+
+model WebhookEvent {
+  id          String   @id @default(cuid())
+  provider    String
+  eventId     String   @unique
+  eventType   String
+  payload     Json
+  processed   Boolean  @default(false)
+  processedAt DateTime?
+  error       String?
+  createdAt   DateTime @default(now())
+  @@map("webhook_events")
+}
+
+model ConnectorCredential {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields:[userId], references:[id])
+  type         String
+  status       ConnStatus @default(NOT_CONNECTED)
+  accessToken  String?
+  refreshToken String?
+  apiKey       String?
+  apiSecret    String?
+  metadata     Json?
+  lastSyncAt   DateTime?
+  errorMessage String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  @@unique([userId, type])
+  @@index([userId])
+  @@map("connector_credentials")
+}
+
+model HuntCycle {
+  id                 String   @id @default(cuid())
+  userId             String
+  user               User     @relation(fields:[userId], references:[id])
+  siteId             String
+  site               Site     @relation(fields:[siteId], references:[id])
+  plan               PlanTier
+  cycleDate          DateTime
+  totalOpportunities Int      @default(0)
+  criticalCount      Int      @default(0)
+  pagesGenerated     Int      @default(0)
+  estimatedTraffic   Int      @default(0)
+  estimatedRevenue   Int      @default(0)
+  geoSignals         Int      @default(0)
+  momentumSignals    Int      @default(0)
+  zipUrl             String?
+  zipExpiresAt       DateTime?
+  deliveredAt        DateTime?
+  deliveryChannels   String[]
+  huntSummary        Json?
+  createdAt          DateTime @default(now())
+  deployLogs         DeployLog[]
+  @@index([userId])
+  @@index([siteId])
+  @@map("hunt_cycles")
+}
+
+model DeployLog {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields:[userId], references:[id])
+  huntCycleId    String?
+  huntCycle      HuntCycle?   @relation(fields:[huntCycleId], references:[id])
+  domain         String
+  slug           String
+  keyword        String
+  target         String
+  status         DeployStatus @default(QUEUED)
+  prUrl          String?
+  deployedUrl    String?
+  cmsPostId      String?
+  error          String?
+  rolledBack     Boolean      @default(false)
+  rollbackAt     DateTime?
+  rollbackReason String?
+  executedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  @@index([userId])
+  @@map("deploy_logs")
+}
+
+model DeployApproval {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields:[userId], references:[id])
+  token      String   @unique
+  payload    Json
+  approved   Boolean  @default(false)
+  approvedAt DateTime?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  @@map("deploy_approvals")
+}
+
+model GEOCycle {
+  id                 String   @id @default(cuid())
+  userId             String
+  siteId             String
+  signalsFound       Int      @default(0)
+  pagesGenerated     Int      @default(0)
+  topCitationScore   Int      @default(0)
+  estimatedAITraffic Int      @default(0)
+  estimatedRevenue   Int      @default(0)
+  cycleDate          DateTime
+  createdAt          DateTime @default(now())
+  @@index([userId])
+  @@map("geo_cycles")
+}
+
+// ── CMS — editorial content pages with per-locale variants ──────────────
+enum CmsStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model CmsPage {
+  id             String    @id @default(cuid())
+  ownerId        String                  // tenant: the customer who owns this page
+  slug           String
+  locale         String
+  title          String
+  body           String    // markdown or HTML
+  status         CmsStatus @default(DRAFT)
+  seoTitle       String?
+  seoDescription String?
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  @@unique([ownerId, slug, locale])
+  @@index([ownerId, status, locale])
+  @@map("cms_pages")
+}
+
+// ── CRM — Veltro's own contacts / leads / deals pipeline ────────────────
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  WON
+  LOST
+}
+enum DealStage {
+  LEAD
+  DISCOVERY
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+enum ActivityType {
+  NOTE
+  CALL
+  EMAIL
+  MEETING
+  TASK
+}
+
+model Contact {
+  id         String   @id @default(cuid())
+  ownerId    String                 // the Veltro user who owns this contact
+  name       String
+  email      String?
+  phone      String?
+  company    String?
+  country    String?
+  source     String?                // where the lead came from (organic, video, referral…)
+  status     LeadStatus @default(NEW)
+  tags       String[]  @default([])
+  notes      String?
+  deals      Deal[]
+  activities Activity[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  @@index([ownerId, status])
+  @@index([ownerId, email])
+  @@map("crm_contacts")
+}
+
+model Deal {
+  id         String    @id @default(cuid())
+  ownerId    String
+  contactId  String
+  contact    Contact   @relation(fields:[contactId], references:[id], onDelete: Cascade)
+  title      String
+  value      Float     @default(0)
+  currency   String    @default("EUR")
+  stage      DealStage @default(LEAD)
+  probability Int      @default(10)   // 0..100
+  expectedClose DateTime?
+  closedAt   DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  @@index([ownerId, stage])
+  @@map("crm_deals")
+}
+
+model Activity {
+  id        String       @id @default(cuid())
+  ownerId   String
+  contactId String
+  contact   Contact      @relation(fields:[contactId], references:[id], onDelete: Cascade)
+  type      ActivityType @default(NOTE)
+  subject   String
+  body      String?
+  dueAt     DateTime?
+  done      Boolean      @default(false)
+  createdAt DateTime     @default(now())
+  @@index([ownerId, contactId])
+  @@map("crm_activities")
+}
+
+// ── FAQ / Q&A — public, per-locale, GEO-structured ──────────────────────
+model FaqItem {
+  id        String   @id @default(cuid())
+  locale    String
+  category  String   @default("general")
+  question  String
+  answer    String
+  order     Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([locale, published, order])
+  @@map("faq_items")
+}
+
+// ── Testimonials — public, per-locale ───────────────────────────────────
+model Testimonial {
+  id        String   @id @default(cuid())
+  locale    String   @default("en")
+  name      String
+  role      String?
+  company   String?
+  country   String?
+  avatarUrl String?
+  quote     String
+  rating    Int      @default(5)
+  featured  Boolean  @default(false)
+  published Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  @@index([locale, published, featured])
+  @@map("testimonials")
+}
+
+// ── Hunt configuration (per subscription) ───────────────────────────────
+model HuntConfig {
+  id             String   @id @default(cuid())
+  subscriptionId String   @unique
+  domain         String
+  seedKeywords   String[] @default([])
+  lang           String   @default("en")
+  country        String   @default("us")
+  competitors    String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@map("hunt_configs")
+}
+
+// ── Weekly report snapshot (per user per week) ──────────────────────────
+model WeeklyReport {
+  id              String   @id @default(cuid())
+  userId          String
+  weekStart       DateTime
+  weekEnd         DateTime
+  domain          String
+  sessions        Int      @default(0)
+  sessionsDelta   Float    @default(0)
+  organicSessions Int      @default(0)
+  organicDelta    Float    @default(0)
+  newUsers        Int      @default(0)
+  conversionRate  Float    @default(0)
+  conversionDelta Float    @default(0)
+  leads           Int      @default(0)
+  leadsDelta      Float    @default(0)
+  revenue         Float    @default(0)
+  revenueDelta    Float    @default(0)
+  avgPosition     Float    @default(0)
+  clicks          Int      @default(0)
+  impressions     Int      @default(0)
+  ctr             Float    @default(0)
+  topPages        Json?
+  topKeywords     Json?
+  criticalAlerts  Json?
+  emailSentAt     DateTime?
+  createdAt       DateTime @default(now())
+  @@unique([userId, weekStart])
+  @@index([userId])
+  @@map("weekly_reports")
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// ACQUISITION MODULE  (Ray Platform Components Standard — Lecture A)
+// Platform declares an ideal-target profile (server-side, never exposed) →
+// the CENTRAL ENGINE discovers + scores + prospects → leads land here with a
+// status lifecycle. Platform NEVER reimplements scoring. Hard per-cohort cost
+// cap (circuit breaker). Zero engine internals exposed to the client.
+// ════════════════════════════════════════════════════════════════════════
+enum ProspectStatus {
+  NEW
+  DISCOVERED
+  SCORED
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  REJECTED
+}
+enum CohortStatus {
+  OPEN
+  RUNNING
+  PAUSED
+  CAPPED
+  COMPLETED
+}
+
+// Ideal Customer Profile — SERVER-ONLY. Never serialized to any client response.
+model IdealTargetProfile {
+  id          String   @id @default(cuid())
+  ownerId     String                          // the platform tenant who owns this ICP
+  label       String
+  industries  String[] @default([])
+  countries   String[] @default([])
+  minRevenue  Float?                           // target company size signals
+  maxRevenue  Float?
+  keywords    String[] @default([])           // intent signals
+  exclusions  String[] @default([])
+  // sovereign weighting hints handed to the central engine — never exposed
+  signalWeights Json?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  cohorts     ProspectCohort[]
+  @@index([ownerId, active])
+  @@map("acq_ideal_target_profiles")
+}
+
+// A discovery+prospecting run against the central engine, with a hard cost cap.
+model ProspectCohort {
+  id            String       @id @default(cuid())
+  ownerId       String
+  profileId     String
+  profile       IdealTargetProfile @relation(fields:[profileId], references:[id], onDelete: Cascade)
+  status        CohortStatus @default(OPEN)
+  // circuit breaker
+  tokenCapCents Int          @default(500)     // hard per-cohort spend cap
+  tokensSpent   Int          @default(0)
+  targetCount   Int          @default(10)      // small cohorts by default
+  discovered    Int          @default(0)
+  engineRef     String?                        // opaque central-engine job id (never exposed raw)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  prospects     Prospect[]
+  @@index([ownerId, status])
+  @@map("acq_cohorts")
+}
+
+// A discovered prospect. score comes FROM the central engine — never computed here.
+model Prospect {
+  id          String         @id @default(cuid())
+  ownerId     String
+  cohortId    String
+  cohort      ProspectCohort @relation(fields:[cohortId], references:[id], onDelete: Cascade)
+  company     String
+  domain      String?
+  contactName String?
+  contactEmail String?
+  country     String?
+  // score is sovereign: set by the engine, exposed to owner but flagged internal-origin
+  score       Int?
+  scoreBand   String?                          // e.g. "A"/"B"/"C" — display only
+  status      ProspectStatus @default(NEW)
+  // raw engine payload is sovereign — never returned to client
+  engineData  Json?
+  contactedAt DateTime?
+  convertedContactId String?                   // links to crm Contact on conversion
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  @@index([ownerId, status])
+  @@index([cohortId, score])
+  @@map("acq_prospects")
+}
+
+// ── Admin audit log (RBAC requirement: admin actions audited server-side) ──
+model AdminAuditLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String                             // e.g. "user.setRole", "cohort.cap"
+  target    String?                            // affected entity id
+  meta      Json?
+  ip        String?
+  createdAt DateTime @default(now())
+  @@index([adminId, createdAt])
+  @@map("admin_audit_logs")
+}

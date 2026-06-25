@@ -1,0 +1,16 @@
+node_modules
+**/node_modules
+.git
+.env
+.env.*
+!.env.example
+dist
+.next
+out
+build
+*.log
+coverage
+.DS_Store
+apps/video-render/out
+README*.md
+*.test.ts

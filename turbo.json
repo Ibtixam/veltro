@@ -1,0 +1,11 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["NODE_ENV", "DATABASE_URL", "REDIS_URL", "PAYBRIDGE_*", "STRIPE_*", "JWT_*"],
+  "pipeline": {
+    "build": { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**"] },
+    "dev": { "cache": false, "persistent": true },
+    "start": { "dependsOn": ["build"] },
+    "lint": { "outputs": [] },
+    "test": { "outputs": ["coverage/**"] }
+  }
+}

@@ -1,0 +1,68 @@
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Dependencies
+node_modules/
+.pnp.*
+.pnpm-store/
+.npm-cache/
+# Monorepo uses root package-lock.json only
+apps/*/package-lock.json
+apps/*/node_modules/
+
+# Build
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+.turbo/
+
+# Prisma generated client
+**/node_modules/.prisma/
+**/generated/
+
+# Logs / OS
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE / editor
+.cursor/
+.vscode/
+.idea/
+*.iml
+
+# Local docs / exports (not source)
+*.docx
+*.doc
+*.pdf
+
+# Docker local overrides
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# Tooling cache
+.eslintcache
+.cache/
+.vercel/
+.netlify/
+
+# Render output
+apps/video-render/out/
+
+# Coverage / test
+coverage/
+.nyc_output/
+.jest/

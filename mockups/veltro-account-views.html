@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<title>Veltro — Customer Account Views · Jiogue LLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#111;--paper:#fff;--swiss-red:#e4002b;--muted:#6b6b6b;--hairline:#e6e6e6;--ok:#0a7d2c;--cols:12;--gutter:24px;--margin:32px;--baseline:8px;--maxw:1280px;--display:'Archivo','Inter',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;--mono:'Space Mono',ui-monospace,monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}body{font-family:var(--body);background:#fafafa;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden;padding-bottom:88px}
+[dir=rtl]{direction:rtl}
+.wrap{position:relative;max-width:var(--maxw);margin-inline:auto;padding-inline:var(--margin)}
+.band{display:grid;grid-template-columns:repeat(var(--cols),1fr);column-gap:var(--gutter)}
+.c2{grid-column:span 2}.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c9{grid-column:span 9}.c12{grid-column:span 12}
+.guides{position:fixed;inset:0;max-width:var(--maxw);margin-inline:auto;display:grid;grid-template-columns:repeat(var(--cols),1fr);column-gap:var(--gutter);padding-inline:var(--margin);pointer-events:none;opacity:0;transition:opacity .15s;z-index:9998}
+.guides.on{opacity:1}.guides span{background:rgba(228,0,43,.06);border-inline:1px solid rgba(228,0,43,.16)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,4vw,44px);line-height:1.05;letter-spacing:-.015em}
+h2{font-family:var(--display);font-weight:700;font-size:24px;line-height:1.1}h3{font-family:var(--display);font-weight:600;font-size:17px}
+p{font-size:15px;line-height:1.5}.lead{font-size:18px;color:#333}
+.folio,.label{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.data{font-family:var(--mono);font-size:13px}
+a{color:var(--ink);text-decoration:none}a:hover{color:var(--swiss-red)}
+.rule{border:0;border-top:2px solid var(--ink);margin-block:16px}.rule--red{border-top-color:var(--swiss-red)}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--body);font-weight:600;font-size:14px;padding:11px 20px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;border-radius:0;transition:.12s}
+.btn:hover{background:var(--ink);color:#fff}.btn--primary{background:var(--swiss-red);border-color:var(--swiss-red);color:#fff}.btn--primary:hover{background:var(--ink);border-color:var(--ink)}
+.btn--sm{padding:7px 13px;font-size:12px}
+.section{padding-block:40px}.stack>*+*{margin-top:14px}.stack-lg>*+*{margin-top:26px}
+.card{border:2px solid var(--ink);padding:18px;background:#fff}
+.panel{border:1px solid var(--hairline);padding:16px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:14px;background:#fff}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;text-align:start;padding:9px 11px;border-bottom:2px solid var(--ink);color:var(--muted)}
+td{padding:9px 11px;border-bottom:1px solid var(--hairline)}
+.tag{font-family:var(--mono);font-size:10px;text-transform:uppercase;padding:3px 7px;border:1px solid var(--ink)}
+.tag--red{background:var(--swiss-red);color:#fff;border-color:var(--swiss-red)}.tag--ok{background:var(--ok);color:#fff;border-color:var(--ok)}.tag--mut{color:var(--muted);border-color:var(--hairline)}
+.bar{height:8px;background:var(--hairline);position:relative;overflow:hidden}.bar>i{position:absolute;inset:0 auto 0 0;background:var(--swiss-red)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:2px solid var(--ink);background:#fff;position:sticky;top:0;z-index:50}
+.brand{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em}.brand b{color:var(--swiss-red)}
+.side{position:sticky;top:64px}
+.navi{display:flex;flex-direction:column;gap:2px}
+.navi a{font-size:14px;font-weight:600;padding:9px 12px;border-left:3px solid transparent}
+.navi a.active{border-left-color:var(--swiss-red);background:#fff}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--swiss-red);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:14px}
+.step{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--hairline)}
+.step .num{width:28px;height:28px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font-family:var(--mono);font-size:12px;flex:0 0 auto}
+.step.done .num{background:var(--ok);border-color:var(--ok);color:#fff}.step.active .num{background:var(--swiss-red);border-color:var(--swiss-red);color:#fff}
+.field{display:flex;flex-direction:column;gap:6px}
+input,select,textarea{font-family:var(--body);font-size:14px;padding:10px;border:2px solid var(--ink);background:#fff;border-radius:0}
+.pill{display:inline-flex;gap:6px;align-items:center;padding:8px 12px;border:2px solid var(--ink);font-size:13px;font-weight:600;cursor:pointer}.pill.sel{background:var(--swiss-red);color:#fff;border-color:var(--swiss-red)}
+.kancol{flex:0 0 200px}
+#sw{position:fixed;left:0;right:0;bottom:0;z-index:9999;background:var(--ink);border-top:3px solid var(--swiss-red);display:flex;overflow-x:auto}
+#sw button{flex:0 0 auto;font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:transparent;border:0;border-inline-end:1px solid #333;padding:12px 14px;cursor:pointer;white-space:nowrap}#sw button.active{background:var(--swiss-red)}
+.view{display:none}.view.active{display:block}
+.hint{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;padding:8px}
+@media(max-width:768px){:root{--margin:16px;--gutter:12px}.c3,.c4,.c5,.c6,.c7,.c8,.c9{grid-column:1/-1}.side{position:static}.guides span:nth-child(n+7){display:none}}
+</style>
+</head>
+<body>
+<div class="guides" id="guides"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+<!-- 1. SIGNUP -->
+<section class="view active" data-view="Sign up">
+  <div class="wrap"><div class="topbar"><div class="brand">VEL<b>TRO</b></div><a class="data" href="#">Already have an account? Log in</a></div></div>
+  <div class="wrap section"><div class="band"><div class="c5" style="margin-inline:auto">
+    <p class="folio">Create your account</p>
+    <h1 style="margin-bottom:20px">Start your 7-day free trial</h1>
+    <div class="card stack">
+      <div class="field"><span class="folio">Full name</span><input value="Aïcha Traoré"></div>
+      <div class="field"><span class="folio">Work email</span><input value="aicha@fintech.sn"></div>
+      <div class="field"><span class="folio">Password</span><input type="password" value="••••••••••"></div>
+      <div class="field"><span class="folio">Country</span><select><option>Senegal</option><option>Cameroon</option><option>France</option><option>Canada</option></select></div>
+      <button class="btn btn--primary" style="width:100%;justify-content:center">Create account →</button>
+      <p class="data" style="color:var(--muted);text-align:center">No card required. Cancel anytime.</p>
+    </div>
+  </div></div></div>
+</section>
+
+<!-- 2. ONBOARDING -->
+<section class="view" data-view="Onboarding">
+  <div class="wrap"><div class="topbar"><div class="brand">VEL<b>TRO</b></div><div class="data">Step 4 of 7</div></div></div>
+  <div class="wrap section"><div class="band">
+    <div class="c4">
+      <p class="folio">Setup</p>
+      <div class="step done"><div class="num">✓</div><div><h3>Account</h3><p class="data" style="color:var(--muted)">aicha@fintech.sn</p></div></div>
+      <div class="step done"><div class="num">✓</div><div><h3>Domain</h3><p class="data" style="color:var(--muted)">fintech.sn</p></div></div>
+      <div class="step done"><div class="num">✓</div><div><h3>Stack detected</h3><p class="data" style="color:var(--muted)">Next.js · 96%</p></div></div>
+      <div class="step active"><div class="num">4</div><div><h3>Connect Google Search Console</h3><p class="data" style="color:var(--muted)">Optional — improves accuracy</p></div></div>
+      <div class="step"><div class="num">5</div><div><h3>Connect GA4</h3></div></div>
+      <div class="step"><div class="num">6</div><div><h3>Choose plan</h3></div></div>
+      <div class="step"><div class="num">7</div><div><h3>Done — first hunt runs</h3></div></div>
+    </div>
+    <div class="c8">
+      <div class="card stack-lg">
+        <div><p class="folio">Step 4</p><h1>Connect Search Console</h1><p class="lead">Link GSC so Veltro replaces traffic estimates with your real impressions, clicks and positions.</p></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn btn--primary">Connect with Google</button><button class="btn">Skip for now</button></div>
+        <hr class="rule"><p class="data" style="color:var(--muted)">Veltro reads search-performance data only. Read-only OAuth scope.</p>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 3. CHOOSE PLAN + PAY -->
+<section class="view" data-view="Plan + Pay">
+  <div class="wrap"><div class="topbar"><div class="brand">VEL<b>TRO</b></div><div class="data">Step 6 of 7</div></div></div>
+  <div class="wrap section">
+    <p class="folio">Choose your plan</p><h1 style="margin-bottom:24px">Activate fintech.sn</h1>
+    <div class="band" style="row-gap:16px">
+      <div class="c3 card stack"><p class="folio">Starter</p><div style="font-family:var(--display);font-weight:800;font-size:32px">€29<span style="font-size:14px;font-weight:400">/mo</span></div><p class="data">1 site · weekly hunt</p><button class="btn btn--sm">Select</button></div>
+      <div class="c3 card stack" style="border-color:var(--swiss-red)"><div style="display:flex;justify-content:space-between"><p class="folio">Pro</p><span class="tag tag--red">Popular</span></div><div style="font-family:var(--display);font-weight:800;font-size:32px">€79<span style="font-size:14px;font-weight:400">/mo</span></div><p class="data">5 sites · video studio</p><button class="btn btn--sm btn--primary">Selected ✓</button></div>
+      <div class="c3 card stack"><p class="folio">Agency</p><div style="font-family:var(--display);font-weight:800;font-size:32px">€199<span style="font-size:14px;font-weight:400">/mo</span></div><p class="data">25 sites · white-label</p><button class="btn btn--sm">Select</button></div>
+      <div class="c3 card stack"><p class="folio">Lifetime</p><div style="font-family:var(--display);font-weight:800;font-size:32px">€1490</div><p class="data">Pay once · forever</p><button class="btn btn--sm">Select</button></div>
+    </div>
+    <hr class="rule rule--red" style="margin-top:28px">
+    <div class="band" style="margin-top:20px"><div class="c7">
+      <p class="folio" style="margin-bottom:12px">Pay with — via PayBridge</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <span class="pill sel">📱 MTN MoMo</span><span class="pill">🟠 Orange Money</span><span class="pill">🌊 Wave</span><span class="pill">💳 Card</span>
+      </div>
+      <div class="stack" style="margin-top:16px;max-width:380px"><div class="field"><span class="folio">MoMo phone number</span><input value="+221 77 123 4567"></div></div>
+      <button class="btn btn--primary" style="margin-top:16px">Pay €79 → activate</button>
+    </div>
+    <div class="c5"><div class="panel stack"><p class="folio">On payment, Veltro auto-provisions:</p>
+      <p class="data">✓ Subscription (Pro, monthly)</p><p class="data">✓ Site record — fintech.sn</p><p class="data">✓ Hunt config — weekly cycle armed</p><p class="data">✓ CRM pipeline initialized</p><p class="data">✓ Onboarding marked complete</p>
+      <p class="data" style="color:var(--muted)">Provider (Flutterwave/Wave) stays a trade secret behind PayBridge.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. CUSTOMER DASHBOARD -->
+<section class="view" data-view="My Dashboard">
+  <div class="wrap"><div class="topbar"><div class="brand">VEL<b>TRO</b></div><div style="display:flex;gap:14px;align-items:center"><span class="tag tag--ok">Pro</span><span class="data">fintech.sn</span><div class="avatar">A</div></div></div></div>
+  <div class="wrap section"><div class="band">
+    <nav class="c2 side navi">
+      <a class="active" href="#">Dashboard</a><a href="#">SEO Audit</a><a href="#">Clusters</a><a href="#">Video Studio</a><a href="#">My CRM</a><a href="#">My CMS</a><a href="#">Weekly Reports</a><a href="#">Settings</a><a href="#">Billing</a>
+    </nav>
+    <div class="c9">
+      <p class="folio">Welcome back, Aïcha</p><h1 style="margin-bottom:20px">fintech.sn — this week</h1>
+      <div class="band" style="row-gap:14px">
+        <div class="c3 panel"><p class="folio">Organic sessions</p><div style="font-family:var(--display);font-weight:800;font-size:34px">3,140</div><span class="data" style="color:var(--ok)">▲ 22%</span></div>
+        <div class="c3 panel"><p class="folio">New leads</p><div style="font-family:var(--display);font-weight:800;font-size:34px">40</div><span class="data" style="color:var(--ok)">▲ 14</span></div>
+        <div class="c3 panel"><p class="folio">Pages live</p><div style="font-family:var(--display);font-weight:800;font-size:34px">512</div><span class="data" style="color:var(--muted)">+18 this week</span></div>
+        <div class="c3 panel" style="border-left:3px solid var(--swiss-red)"><p class="folio">Next hunt</p><div style="font-family:var(--display);font-weight:800;font-size:34px">2d</div><span class="data">Mon 08:00</span></div>
+      </div>
+      <div class="card stack" style="margin-top:20px;border-color:var(--swiss-red)">
+        <p class="folio">This week's #1 action</p><h2>Publish cluster: "prospection b2b sénégal"</h2>
+        <p>6 keywords · avg KD 9 · est. 3.8× conversion. Working pages ready in your ZIP.</p>
+        <div style="display:flex;gap:10px"><button class="btn btn--primary btn--sm">Download ZIP</button><button class="btn btn--sm">View cluster</button></div>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 5. MY CRM (tenant) -->
+<section class="view" data-view="My CRM">
+  <div class="wrap"><div class="topbar"><div class="brand">VEL<b>TRO</b></div><div style="display:flex;gap:14px;align-items:center"><span class="data">fintech.sn</span><div class="avatar">A</div></div></div></div>
+  <div class="wrap section">
+    <p class="folio">My CRM · scoped to your account</p><h1 style="margin-bottom:18px">Pipeline</h1>
+    <div class="band" style="row-gap:14px;margin-bottom:24px">
+      <div class="c3 panel"><p class="folio">Contacts</p><div style="font-family:var(--display);font-weight:800;font-size:30px">40</div></div>
+      <div class="c3 panel"><p class="folio">Open deals</div><div style="font-family:var(--display);font-weight:800;font-size:30px">12</div></div>
+      <div class="c3 panel"><p class="folio">Pipeline</p><div style="font-family:var(--display);font-weight:800;font-size:30px">€48k</div></div>
+      <div class="c3 panel" style="border-left:3px solid var(--swiss-red)"><p class="folio">Win rate</p><div style="font-family:var(--display);font-weight:800;font-size:30px;color:var(--swiss-red)">28%</div></div>
+    </div>
+    <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:10px">
+      <div class="kancol"><div class="folio" style="border-top:3px solid var(--ink);padding-top:8px">Lead · 5</div><div class="stack" style="margin-top:8px"><div class="panel"><b style="font-size:14px">Banque régionale</b><div class="data" style="color:var(--muted)">organic · €4.2k</div></div><div class="panel"><b style="font-size:14px">PME Dakar</b><div class="data" style="color:var(--muted)">video · €2.1k</div></div></div></div>
+      <div class="kancol"><div class="folio" style="border-top:3px solid var(--ink);padding-top:8px">Discovery · 3</div><div class="stack" style="margin-top:8px"><div class="panel"><b style="font-size:14px">Assurance SN</b><div class="data" style="color:var(--muted)">€6.0k · 40%</div></div></div></div>
+      <div class="kancol"><div class="folio" style="border-top:3px solid var(--ink);padding-top:8px">Proposal · 2</div><div class="stack" style="margin-top:8px"><div class="panel"><b style="font-size:14px">Télécom</b><div class="data" style="color:var(--muted)">€9.9k · 60%</div></div></div></div>
+      <div class="kancol"><div class="folio" style="border-top:3px solid var(--swiss-red);padding-top:8px">Won · 2</div><div class="stack" style="margin-top:8px"><div class="panel" style="border-color:var(--swiss-red)"><b style="font-size:14px">Microfinance</b><div class="data" style="color:var(--ok)">€7.3k ✓</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. MY CMS (tenant) -->
+<section class="view" data-view="My CMS">
+  <div class="wrap"><div class="topbar"><div class="brand">VEL<b>TRO</b></div><div style="display:flex;gap:14px;align-items:center"><span class="data">fintech.sn</span><div class="avatar">A</div></div></div></div>
+  <div class="wrap section">
+    <p class="folio">My CMS · only your pages</p><h1 style="margin-bottom:18px">Content</h1>
+    <div class="band"><div class="c8">
+      <table><thead><tr><th>slug</th><th>locale</th><th>status</th><th>updated</th><th></th></tr></thead><tbody>
+        <tr><td>prospection-b2b-senegal</td><td>fr</td><td><span class="tag tag--ok">Published</span></td><td class="data">2h ago</td><td><a class="data" href="#">Edit</a></td></tr>
+        <tr><td>lead-intelligence</td><td>fr</td><td><span class="tag tag--ok">Published</span></td><td class="data">1d ago</td><td><a class="data" href="#">Edit</a></td></tr>
+        <tr><td>lead-intelligence</td><td>en</td><td><span class="tag tag--mut">Draft</span></td><td class="data">1d ago</td><td><a class="data" href="#">Edit</a></td></tr>
+        <tr><td>about</td><td>fr</td><td><span class="tag tag--ok">Published</span></td><td class="data">3d ago</td><td><a class="data" href="#">Edit</a></td></tr>
+      </tbody></table>
+      <button class="btn btn--primary btn--sm" style="margin-top:14px">+ New page</button>
+    </div>
+    <div class="c4"><div class="panel stack"><p class="folio">Tenant isolation</p><p class="data">These pages belong to <b>fintech.sn</b> only. Scoped by ownerId — no other customer can read or edit them.</p><hr class="rule"><p class="folio">SEO score</p><div class="bar"><i style="right:18%"></i></div><p class="data" style="color:var(--muted)">82 / 100 · FAQPage JSON-LD active</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. BILLING -->
+<section class="view" data-view="Billing">
+  <div class="wrap"><div class="topbar"><div class="brand">VEL<b>TRO</b></div><div class="avatar">A</div></div></div>
+  <div class="wrap section">
+    <p class="folio">Billing</p><h1 style="margin-bottom:18px">Your subscription</h1>
+    <div class="band" style="row-gap:16px"><div class="c5"><div class="card stack">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h2>Pro</h2><span class="tag tag--ok">Active</span></div>
+      <p class="data">€79 / month · via PayBridge (MTN MoMo)</p><p class="data">Renews 20 Jul 2026</p>
+      <hr class="rule"><div style="display:flex;gap:10px"><button class="btn btn--sm">Change plan</button><button class="btn btn--sm">Update payment</button><button class="btn btn--sm" style="border-color:var(--muted);color:var(--muted)">Cancel</button></div>
+    </div></div>
+    <div class="c7"><p class="folio" style="margin-bottom:10px">Payment history</p><table><thead><tr><th>date</th><th>amount</th><th>method</th><th>status</th></tr></thead><tbody>
+      <tr><td class="data">20 Jun 2026</td><td>€79</td><td>MTN MoMo</td><td><span class="tag tag--ok">Paid</span></td></tr>
+      <tr><td class="data">20 May 2026</td><td>€79</td><td>MTN MoMo</td><td><span class="tag tag--ok">Paid</span></td></tr>
+      <tr><td class="data">20 Apr 2026</td><td>€0</td><td>Trial</td><td><span class="tag tag--mut">Trial</span></td></tr>
+    </tbody></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. PLATFORM ADMIN (owner) -->
+<section class="view" data-view="Platform Admin">
+  <div class="wrap"><div class="topbar"><div class="brand">VEL<b>TRO</b> <span class="tag tag--red" style="margin-left:8px">ADMIN</span></div><div class="avatar" style="background:#111">R</div></div></div>
+  <div class="wrap section">
+    <p class="folio">Platform · all customers</p><h1 style="margin-bottom:18px">Control room</h1>
+    <div class="band" style="row-gap:14px">
+      <div class="c3 panel"><p class="folio">Customers</p><div style="font-family:var(--display);font-weight:800;font-size:32px">1,284</div></div>
+      <div class="c3 panel"><p class="folio">Active subs</p><div style="font-family:var(--display);font-weight:800;font-size:32px">612</div></div>
+      <div class="c3 panel"><p class="folio">MRR</p><div style="font-family:var(--display);font-weight:800;font-size:32px">€48k</div></div>
+      <div class="c3 panel" style="border-left:3px solid var(--swiss-red)"><p class="folio">Pending deploys</p><div style="font-family:var(--display);font-weight:800;font-size:32px;color:var(--swiss-red)">7</div></div>
+    </div>
+    <div style="margin-top:24px"><table><thead><tr><th>email</th><th>plan</th><th>site</th><th>provisioned</th><th>country</th></tr></thead><tbody>
+      <tr><td>aicha@fintech.sn</td><td><span class="tag">Pro</span></td><td>fintech.sn</td><td><span class="tag tag--ok">✓ full</span></td><td>SN</td></tr>
+      <tr><td>daniel@saas.ng</td><td><span class="tag">Agency</span></td><td>saas.ng</td><td><span class="tag tag--ok">✓ full</span></td><td>NG</td></tr>
+      <tr><td>camille@shop.fr</td><td><span class="tag">Pro</span></td><td>shop.fr</td><td><span class="tag tag--ok">✓ full</span></td><td>FR</td></tr>
+    </tbody></table></div>
+    <p class="hint">Admin is global by design — the platform owner sees every tenant. Customers only ever see their own scoped data.</p>
+  </div>
+</section>
+
+<nav id="sw"></nav>
+<script>
+const V=[...document.querySelectorAll('.view')],S=document.getElementById('sw');
+V.forEach((v,i)=>{const b=document.createElement('button');b.textContent=(i+1)+' '+v.dataset.view;b.onclick=()=>{V.forEach(x=>x.classList.remove('active'));S.querySelectorAll('button').forEach(x=>x.classList.remove('active'));v.classList.add('active');b.classList.add('active');scrollTo(0,0)};if(!i)b.classList.add('active');S.appendChild(b)});
+addEventListener('keydown',e=>{const t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'))return;if(e.key==='g'||e.key==='G')document.getElementById('guides').classList.toggle('on')});
+</script>
+</body>
+</html>
