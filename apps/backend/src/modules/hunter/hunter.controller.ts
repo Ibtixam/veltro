@@ -76,7 +76,12 @@ export class HunterController {
         site: { select: { domain: true } },
       },
     });
-    return { cycles: cycles.map(c => ({ ...c, domain: c.site.domain })) };
+    return {
+      cycles: cycles.map(({ site, ...c }) => ({
+        ...c,
+        domain: site?.domain ?? null,
+      })),
+    };
   }
 
   // Pricing endpoint (public)

@@ -29,9 +29,6 @@ import { HealthModule } from './modules/health/health.module';
 import { ClusteringModule } from './modules/clustering/clustering.module';
 import { CostControlModule } from './modules/cost-control/cost-control.module';
 
-// Single-controller modules
-import { HealthController } from './modules/health/health.controller';
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -71,6 +68,5 @@ import { HealthController } from './modules/health/health.controller';
     ClusteringModule,
     CostControlModule,
   ],
-  controllers: [HealthController],
 })
 export class AppModule {}
