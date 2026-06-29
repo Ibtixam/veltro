@@ -14,7 +14,7 @@ export default function FaqPage() {
   useEffect(() => {
     const l = (typeof document !== 'undefined' && document.documentElement.lang) || 'en';
     setLocale(l);
-    fetch(`${API}/api/content/faq?locale=${l}`).then(r => r.ok ? r.json() : []).then(setItems).catch(() => setItems([]));
+    fetch(`${API}/content/faq?locale=${l}`).then(r => r.ok ? r.json() : []).then(setItems).catch(() => setItems([]));
   }, []);
 
   const categories = [...new Set(items.map(i => i.category))];

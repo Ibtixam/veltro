@@ -14,7 +14,7 @@ const ALL_LOCALES = new Set([
   'en','fr','ar','zh','sw',
 ]);
 
-@Controller('api/i18n')
+@Controller('i18n')
 export class I18nController {
   private readonly logger = new Logger(I18nController.name);
 

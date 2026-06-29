@@ -9,7 +9,7 @@ export default function Testimonials({ featuredOnly = false }: { featuredOnly?: 
 
   useEffect(() => {
     const l = (typeof document !== 'undefined' && document.documentElement.lang) || 'en';
-    fetch(`${API}/api/content/testimonials?locale=${l}${featuredOnly ? '&featured=true' : ''}`)
+    fetch(`${API}/content/testimonials?locale=${l}${featuredOnly ? '&featured=true' : ''}`)
       .then(r => r.ok ? r.json() : []).then(setItems).catch(() => setItems([]));
   }, [featuredOnly]);
 

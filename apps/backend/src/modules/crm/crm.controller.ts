@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard, TenantResource } from '../../common/guards/tenant.guard';
 import { CrmService } from './crm.service';
 
-@Controller('api/crm')
+@Controller('crm')
 @UseGuards(JwtAuthGuard, TenantGuard)
 export class CrmController {
   constructor(private readonly crm: CrmService) {}

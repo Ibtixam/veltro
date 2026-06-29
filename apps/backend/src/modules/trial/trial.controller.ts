@@ -2,7 +2,7 @@ import { Controller, Post, Get, Body, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TrialService } from './trial.service';
 
-@Controller('api/trial')
+@Controller('trial')
 @UseGuards(JwtAuthGuard)
 export class TrialController {
   constructor(private readonly trial: TrialService) {}

@@ -21,7 +21,7 @@ export default function GridOverlay() {
   }, []);
 
   return (
-    <div className="wrap" aria-hidden="true" style={{ position: 'fixed', inset: 0, height: '100%' }}>
+    <div className="wrap" aria-hidden="true" style={{ position: 'fixed', inset: 0, height: '100%', pointerEvents: 'none' }}>
       <div className={`guides${on ? ' on' : ''}`}>
         {Array.from({ length: 12 }).map((_, i) => <span key={i} />)}
       </div>

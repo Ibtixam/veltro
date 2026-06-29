@@ -27,9 +27,9 @@ export default function AdminPage() {
 
   useEffect(() => {
     (async () => {
-      const m = await authedGet<Metrics>('/api/admin/metrics');
+      const m = await authedGet<Metrics>('/admin/metrics');
       setMetrics(m);
-      setUsers((await authedGet<Row[]>('/api/admin/users')) ?? []);
+      setUsers((await authedGet<Row[]>('/admin/users')) ?? []);
       setLoading(false);
     })();
   }, []);
@@ -37,7 +37,7 @@ export default function AdminPage() {
   useEffect(() => {
     (async () => {
       if (tab === 'users') { setRows(users); return; }
-      const data = await authedGet<Row[]>(`/api/admin/${tab}`);
+      const data = await authedGet<Row[]>(`/admin/${tab}`);
       setRows(data ?? []);
     })();
   }, [tab, users]);

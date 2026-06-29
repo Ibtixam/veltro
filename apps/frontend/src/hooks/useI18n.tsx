@@ -41,7 +41,11 @@ export function I18nProvider({ children, initial }: { children: React.ReactNode;
     if (!T[locale] && !remote[locale]) {
       fetch(`/api/i18n?locale=${locale}`)
         .then(r => (r.ok ? r.json() : null))
-        .then(data => { if (data?.translations) setRemote(prev => ({ ...prev, [locale]: data.translations })); })
+        .then(data => {
+          if (data && !data._fallback && typeof data === 'object') {
+            setRemote(prev => ({ ...prev, [locale]: data }));
+          }
+        })
         .catch(() => { /* fall back to fr/en in t() */ });
     }
   }, [locale, remote]);

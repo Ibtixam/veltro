@@ -279,11 +279,15 @@ function I18nProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const fetchQueue = useRef(new Set());
 
-  useEffect(() => { setLocaleState(detectLocale()); }, []);
+  useEffect(() => {
+    const stored = typeof window !== 'undefined' ? window.localStorage.getItem('veltro_locale') : null;
+    setLocaleState(stored && SUPPORTED_LOCALES.includes(stored) ? stored : detectLocale());
+  }, []);
 
   useEffect(() => {
     document.documentElement.dir = RTL_LOCALES.has(locale) ? 'rtl' : 'ltr';
     document.documentElement.lang = locale;
+    if (typeof window !== 'undefined') window.localStorage.setItem('veltro_locale', locale);
   }, [locale]);
 
   const fetchLocale = useCallback(async (loc) => {
@@ -294,7 +298,9 @@ function I18nProvider({ children }) {
       const res = await fetch(`/api/i18n?locale=${loc}`);
       if (res.ok) {
         const data = await res.json();
-        setTranslations(prev => ({ ...prev, [loc]: data }));
+        if (data && !data._fallback) {
+          setTranslations(prev => ({ ...prev, [loc]: data }));
+        }
       }
     } catch (e) {
       console.warn(`[i18n] Failed to load ${loc}, falling back to EN`);
@@ -395,8 +401,24 @@ function Input({ value, onChange, type='text', placeholder, onBlur }) {
 function LangPicker() {
   const { locale, setLocale, loading } = useI18n();
   const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const onEsc = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [open]);
+
   return (
-    <div style={{ position:'relative' }}>
+    <div ref={ref} style={{ position:'relative' }}>
       <button onClick={() => setOpen(o=>!o)}
         style={{ background:'none', border:`1px solid ${C.rule}`, color:C.ghost,
           padding:'4px 10px', fontSize:12, cursor:'pointer', fontFamily:'inherit',

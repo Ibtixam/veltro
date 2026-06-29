@@ -5,7 +5,7 @@ export async function GET(
   { params }: { params: Promise<{ countryCode: string }> },
 ) {
   const { countryCode } = await params;
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://backend:4000/api';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
   // Respect Cloudflare country header over param
   const country = req.headers.get('cf-ipcountry') ?? countryCode ?? 'FR';
 

@@ -2,7 +2,7 @@ import { Controller, Get, Post, Delete, Param, Query, Body, UseGuards, Req } fro
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CmsService, CmsPageInput } from './cms.service';
 
-@Controller('api/cms')
+@Controller('cms')
 export class CmsController {
   constructor(private readonly cms: CmsService) {}
 

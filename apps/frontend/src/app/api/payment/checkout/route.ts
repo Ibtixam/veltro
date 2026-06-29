@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const token = req.headers.get('authorization') ?? req.cookies.get('veltro_token')?.value;
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://backend:4000/api';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
   // Attach client-specific metadata to every checkout
   const enrichedBody = {

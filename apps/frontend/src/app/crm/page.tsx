@@ -21,9 +21,9 @@ export default function CrmPage() {
 
   useEffect(() => {
     (async () => {
-      setMetrics(await authedGet('/api/crm/metrics'));
-      setContacts((await authedGet('/api/crm/contacts')) ?? []);
-      setPipeline(await authedGet('/api/crm/pipeline'));
+      setMetrics(await authedGet('/crm/metrics'));
+      setContacts((await authedGet('/crm/contacts')) ?? []);
+      setPipeline(await authedGet('/crm/pipeline'));
       setLoading(false);
     })();
   }, []);

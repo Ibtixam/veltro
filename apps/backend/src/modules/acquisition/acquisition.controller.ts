@@ -2,7 +2,7 @@ import { Controller, Get, Post, Param, Body, Query, UseGuards, Req } from '@nest
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AcquisitionService } from './acquisition.service';
 
-@Controller('api/acquisition')
+@Controller('acquisition')
 @UseGuards(JwtAuthGuard)
 export class AcquisitionController {
   constructor(private readonly acq: AcquisitionService) {}

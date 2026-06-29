@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard, Roles } from '../../common/guards/roles.guard';
 import { ContentService } from './content.service';
 
-@Controller('api/content')
+@Controller('content')
 export class ContentController {
   constructor(private readonly content: ContentService) {}
 

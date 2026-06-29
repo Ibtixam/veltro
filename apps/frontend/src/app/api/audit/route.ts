@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Forward to NestJS backend
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://backend:4000/api';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
   const token = req.headers.get('authorization');
 
   try {
